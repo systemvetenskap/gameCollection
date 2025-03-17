@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using gameCollectionForelasning.Models;
+using gameCollectionForelasning.Models.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 
@@ -20,7 +21,6 @@ namespace gameCollectionForelasning.repositories
 
             _connectionString = config.GetConnectionString("DefaultConnection");
         }
-
         public async Task CreateNewCompany(Company company)
         {
             try
@@ -40,7 +40,6 @@ namespace gameCollectionForelasning.repositories
                 throw ex;
             }
         }
-
         public async Task<bool> DeleteGame(Game game)
         {
             try
@@ -60,7 +59,6 @@ namespace gameCollectionForelasning.repositories
                 throw ex;
             }
         }
-
         public async Task<bool> UpdateGame(Game game)
         {
             try
@@ -90,7 +88,95 @@ namespace gameCollectionForelasning.repositories
                 throw ex;
             }            
         }
+        public async Task<List<Company>> GetAllCompanies()
+        {
+            List<Company> companies = new List<Company>();
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
 
+            using var command = new NpgsqlCommand("select id, name from company", conn);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Company company = new Company
+                    {
+                        Id = (int)reader["id"],
+                        Name = reader["name"].ToString()
+                    };
+                    companies.Add(company);
+                }
+            }
+            return companies;
+        }
+        public async Task<List<Genre>> GetAllGenres()
+        {
+            List<Genre> genres = new List<Genre>();
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            using var command = new NpgsqlCommand("select id, name from genre", conn);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Genre genre = new Genre
+                    {
+                        Id = (int)reader["id"],
+                        Name = reader["name"].ToString()
+                    };
+                    genres.Add(genre);
+                }
+            }
+            return genres;
+        }
+        public async Task<List<Models.Console>> GetAllConsoles()
+        {
+            List<Models.Console> consoles = new List<Models.Console>();
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            using var command = new NpgsqlCommand("select id, name from console", conn);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Models.Console console = new Models.Console
+                    {
+                        Id = (int)reader["id"],
+                        Name = reader["name"].ToString()
+                    };
+                    consoles.Add(console);
+                }
+            }
+            return consoles;
+        }
+        public async Task<List<GameSPVM>> GetAllGameSPVM()
+        {
+            List<GameSPVM> games = new List<GameSPVM>();
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            using var command = new NpgsqlCommand("select id, image_url from game", conn);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    GameSPVM gameSPVM = new GameSPVM
+                    {
+                        Id = (int)reader["id"],
+                        ImageURL = reader["image_url"].ToString()
+                    };
+
+                    games.Add(gameSPVM);
+                }
+            }
+            return games;
+        }
         public async Task<List<int>> GetAllGameIDs()
         {
             List<int> gameIds = new List<int>();
@@ -109,7 +195,6 @@ namespace gameCollectionForelasning.repositories
             }
             return gameIds;
         }
-
         public async Task<Game> GetGameByIdAsync(int id)
         {
             Game game = null;
@@ -143,8 +228,6 @@ namespace gameCollectionForelasning.repositories
 
             return game;
         }
-
-
         private static T? ConvertFromDBVal<T>(object obj)
         {
             if (obj == null || obj == DBNull.Value)
@@ -153,7 +236,6 @@ namespace gameCollectionForelasning.repositories
             }
             return (T)obj;
         }
-
         private static object ConvertToDBVal<T>(object obj)
         {
             if (obj == null || obj == string.Empty)

@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using gameCollectionForelasning.Models;
+using gameCollectionForelasning.Models.ViewModels;
 using gameCollectionForelasning.repositories;
 
 namespace gameCollectionForelasning
@@ -26,6 +27,71 @@ namespace gameCollectionForelasning
         public MainWindow()
         {
             InitializeComponent();
+            FillComboboxes();
+            FillStackPanelWithGames();
+        }
+
+        private async void FillStackPanelWithGames()
+        {
+            spGames.Children.Clear();
+            List<GameSPVM> games = await _dbRepo.GetAllGameSPVM();
+
+            foreach (GameSPVM g in games)
+            {
+                Button btn = new Button
+                {
+                    Width = 60,
+                    Height = 120,
+                    Margin = new Thickness(3),
+                    Background = Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
+                    VerticalAlignment = VerticalAlignment.Bottom
+                };
+
+                Image img = new Image
+                {
+                    Source = new BitmapImage(new Uri(g.ImageURL, UriKind.RelativeOrAbsolute)),
+                    Width = 60,
+                    Height = 120,
+                    VerticalAlignment = VerticalAlignment.Bottom
+                };
+
+                btn.Content = img;
+                btn.Tag = g;
+                btn.Click += GameImage_Click;
+
+                spGames.Children.Add(btn);
+            }
+        }
+
+        private async void GameImage_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (Button)sender;
+
+            GameSPVM gamespvm = (GameSPVM)button.Tag;
+
+            if(gamespvm != null)
+            {
+                Game game = await _dbRepo.GetGameByIdAsync(gamespvm.Id);
+                RefreshGameDataToUI(game);
+            }
+        }
+
+        private async void FillComboboxes()
+        {
+            List<Company> companies = await _dbRepo.GetAllCompanies();
+            List<Models.Console> consoles = await _dbRepo.GetAllConsoles();
+
+            FillCombobox<Models.Console>(cbConsoles, consoles);
+            FillCombobox<Company>(cbDeveloper, companies);
+            FillCombobox<Company>(cbPublisher, companies);
+        }
+
+        private async void FillCombobox<T>(ComboBox cb, List<T> list)
+        {
+            cb.ItemsSource = list;
+            cb.DisplayMemberPath = "Name";
+            cb.SelectedValuePath = "Id";
         }
 
         private async void btnGetGame_Click(object sender, RoutedEventArgs e)

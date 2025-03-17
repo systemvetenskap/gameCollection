@@ -1,29 +1,189 @@
-﻿<Window x:Class="gameCollectionForelasning.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:gameCollectionForelasning"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="552" Width="910">
+﻿<Window
+    x:Class="gameCollectionForelasning.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:gameCollectionForelasning"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="MainWindow"
+    Width="910"
+    Height="609"
+    mc:Ignorable="d">
     <Grid>
-        <Button x:Name="btnGetGame" Content="Hämta spel" HorizontalAlignment="Center" Margin="0,462,0,0" VerticalAlignment="Top" Height="38" Width="84" Click="btnGetGame_Click"/>
-        <TextBlock HorizontalAlignment="Left" Margin="271,233,0,0" TextWrapping="Wrap" Text="Speltitel:" VerticalAlignment="Top" Width="93"/>
-        <TextBox x:Name="txtGameName" HorizontalAlignment="Left" Margin="369,232,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="265"/>
-        <TextBlock HorizontalAlignment="Left" Margin="271,255,0,0" TextWrapping="Wrap" Text="Värde (kr):" VerticalAlignment="Top" Width="93"/>
-        <TextBox x:Name="txtValue" HorizontalAlignment="Left" Margin="369,254,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="265"/>
-        <TextBlock HorizontalAlignment="Left" Margin="271,278,0,0" TextWrapping="Wrap" Text="Inköpsdatum:" VerticalAlignment="Top" Width="93"/>
-        <TextBox x:Name="txtPurchaseDate" HorizontalAlignment="Left" Margin="369,277,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="265"/>
-        <TextBlock HorizontalAlignment="Left" Margin="271,326,0,0" TextWrapping="Wrap" Text="ImageURL:" VerticalAlignment="Top" Width="93"/>
-        <TextBox x:Name="txtImageURL" HorizontalAlignment="Left" Margin="369,325,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="265" Height="55"/>
-        <TextBlock HorizontalAlignment="Left" Margin="271,302,0,0" TextWrapping="Wrap" Text="Highscore:" VerticalAlignment="Top" Width="93"/>
-        <TextBox x:Name="txtHighscore" HorizontalAlignment="Left" Margin="369,301,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="265"/>
-        <Image x:Name="imgGameBoxart" HorizontalAlignment="Left" Height="227" Margin="660,186,0,0" VerticalAlignment="Top" Width="228"/>
-        <Label Content="Bolagsnamn:" HorizontalAlignment="Left" Margin="27,181,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="txtCompanyName" HorizontalAlignment="Left" Margin="104,186,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
-        <Button x:Name="btnCreateCompany" Content="Skapa bolag" HorizontalAlignment="Left" Margin="104,209,0,0" VerticalAlignment="Top" Width="120" Click="btnCreateCompany_Click"/>
-        <Button x:Name="btnSaveChanges" Content="Spara ändringar" HorizontalAlignment="Left" Margin="533,385,0,0" VerticalAlignment="Top" Width="101" Click="btnSaveChanges_Click"/>
-        <Button x:Name="btnDeleteGame" Content="Ta bort spel" Background="Red" HorizontalAlignment="Left" Margin="413,385,0,0" VerticalAlignment="Top" Width="74" Click="btnDeleteGame_Click"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="17*"/>
+            <ColumnDefinition Width="53*"/>
+        </Grid.ColumnDefinitions>
+        <Button
+            x:Name="btnGetGame"
+            Width="84"
+            Height="38"
+            Margin="192,490,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Click="btnGetGame_Click"
+            Content="Hämta spel" Grid.Column="1" />
+        <TextBlock
+            Width="93"
+            Margin="50,186,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="Speltitel:"
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBox
+            x:Name="txtGameName"
+            Width="265"
+            Margin="148,185,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text=""
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBlock
+            Width="93"
+            Margin="50,208,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="Värde (kr):"
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBox
+            x:Name="txtValue"
+            Width="265"
+            Margin="148,207,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text=""
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBlock
+            Width="93"
+            Margin="50,230,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="Inköpsdatum:"
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBox
+            x:Name="txtPurchaseDate"
+            Width="265"
+            Margin="148,229,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text=""
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBlock
+            Width="93"
+            Margin="50,279,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="ImageURL:"
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBox
+            x:Name="txtImageURL"
+            Width="265"
+            Height="55"
+            Margin="148,278,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text=""
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBlock
+            Width="93"
+            Margin="50,254,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="Highscore:"
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBox
+            x:Name="txtHighscore"
+            Width="265"
+            Margin="148,253,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text=""
+            TextWrapping="Wrap" Grid.Column="1" />
+        <Image
+            x:Name="imgGameBoxart"
+            Width="228"
+            Height="227"
+            Margin="439,186,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top" Grid.Column="1" />
+        <Label
+            Margin="27,181,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Content="Bolagsnamn:" />
+        <TextBox
+            x:Name="txtCompanyName"
+            Width="120"
+            Margin="104,186,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text=""
+            TextWrapping="Wrap" Grid.ColumnSpan="2" />
+        <Button
+            x:Name="btnCreateCompany"
+            Width="120"
+            Margin="104,209,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Click="btnCreateCompany_Click"
+            Content="Skapa bolag" Grid.ColumnSpan="2" />
+        <Button
+            x:Name="btnSaveChanges"
+            Width="101"
+            Margin="312,421,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Click="btnSaveChanges_Click"
+            Content="Spara ändringar" Grid.Column="1" />
+        <Button
+            x:Name="btnDeleteGame"
+            Width="74"
+            Margin="192,421,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Background="Red"
+            Click="btnDeleteGame_Click"
+            Content="Ta bort spel" Grid.Column="1" />
+        <TextBlock
+            Width="93"
+            Margin="50,342,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="Konsol:"
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBlock
+            Width="93"
+            Margin="50,367,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="Utvecklare:"
+            TextWrapping="Wrap" Grid.Column="1" />
+        <TextBlock
+            Width="93"
+            Margin="50,393,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="Utgivare:"
+            TextWrapping="Wrap" Grid.Column="1" />
+        <ComboBox
+            x:Name="cbConsoles"
+            Width="265"
+            Margin="148,339,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top" Grid.Column="1" />
+        <ComboBox
+            x:Name="cbDeveloper"
+            Width="265"
+            Margin="148,365,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top" Grid.Column="1" />
+        <ComboBox
+            x:Name="cbPublisher"
+            Width="265"
+            Margin="148,391,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top" Grid.Column="1" />
+        <StackPanel x:Name="spGames" Margin="10,10,10,454" Orientation="Horizontal" Grid.ColumnSpan="2"/>
 
     </Grid>
 </Window>
