@@ -35,9 +35,26 @@ namespace gameCollectionForelasning.repositories
 
                 var result = await command.ExecuteNonQueryAsync();
             }
-            catch (Exception ex)
+            catch (PostgresException pgEx)
             {
-                throw ex;
+                switch (pgEx.SqlState)
+                {
+                    case "23505":
+                        //Unique-constraint som är brutet
+                        throw new Exception($"Bolagsnamn får bara förekomma en gång i databasen och {company.Name} förekommer redan.", pgEx);
+                    case "23503":
+                        //ForeignKey-constraint
+                        throw new Exception($"Ett fel har inträffat med någon främmande nyckel.", pgEx);
+                    case "23514":
+                        //Check-constraints
+                        throw new Exception($"Ett check-constraint har brutits.", pgEx);
+                    default:
+                        throw new Exception($"Ett postgresqlfel inträffade", pgEx);
+                }
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
         public async Task<bool> DeleteGame(Game game)
@@ -54,9 +71,9 @@ namespace gameCollectionForelasning.repositories
 
                 return await command.ExecuteNonQueryAsync() > 0;
             }
-            catch (Exception ex)  
+            catch (Exception)  
             {
-                throw ex;
+                throw;
             }
         }
         public async Task<bool> UpdateGame(Game game)
@@ -83,150 +100,197 @@ namespace gameCollectionForelasning.repositories
 
                 return await command.ExecuteNonQueryAsync() > 0;
             }
-            catch (Exception ex)
+            catch(PostgresException)
             {
-                throw ex;
+                throw;
+            }
+            catch (Exception)
+            {
+                throw;
             }            
         }
         public async Task<List<Company>> GetAllCompanies()
         {
-            List<Company> companies = new List<Company>();
-            using var conn = new NpgsqlConnection(_connectionString);
-            await conn.OpenAsync();
-
-            using var command = new NpgsqlCommand("select id, name from company", conn);
-
-            using (var reader = command.ExecuteReader())
+            try
             {
-                while (reader.Read())
+                List<Company> companies = new List<Company>();
+                using var conn = new NpgsqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                using var command = new NpgsqlCommand("select id, name from company", conn);
+
+                using (var reader = command.ExecuteReader())
                 {
-                    Company company = new Company
+                    while (reader.Read())
                     {
-                        Id = (int)reader["id"],
-                        Name = reader["name"].ToString()
-                    };
-                    companies.Add(company);
+                        Company company = new Company
+                        {
+                            Id = (int)reader["id"],
+                            Name = reader["name"].ToString()
+                        };
+                        companies.Add(company);
+                    }
                 }
+                return companies;
             }
-            return companies;
+            catch(Exception)
+            {
+                throw;
+            }
         }
         public async Task<List<Genre>> GetAllGenres()
         {
-            List<Genre> genres = new List<Genre>();
-            using var conn = new NpgsqlConnection(_connectionString);
-            await conn.OpenAsync();
-
-            using var command = new NpgsqlCommand("select id, name from genre", conn);
-
-            using (var reader = command.ExecuteReader())
+            try
             {
-                while (reader.Read())
+                List<Genre> genres = new List<Genre>();
+                using var conn = new NpgsqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                using var command = new NpgsqlCommand("select id, name from genre", conn);
+
+                using (var reader = command.ExecuteReader())
                 {
-                    Genre genre = new Genre
+                    while (reader.Read())
                     {
-                        Id = (int)reader["id"],
-                        Name = reader["name"].ToString()
-                    };
-                    genres.Add(genre);
+                        Genre genre = new Genre
+                        {
+                            Id = (int)reader["id"],
+                            Name = reader["name"].ToString()
+                        };
+                        genres.Add(genre);
+                    }
                 }
+                return genres;            
             }
-            return genres;
+            catch(Exception)
+            {
+                throw;
+            }
         }
         public async Task<List<Models.Console>> GetAllConsoles()
         {
-            List<Models.Console> consoles = new List<Models.Console>();
-            using var conn = new NpgsqlConnection(_connectionString);
-            await conn.OpenAsync();
-
-            using var command = new NpgsqlCommand("select id, name from console", conn);
-
-            using (var reader = command.ExecuteReader())
+            try
             {
-                while (reader.Read())
+                List<Models.Console> consoles = new List<Models.Console>();
+                using var conn = new NpgsqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                using var command = new NpgsqlCommand("select id, name from console", conn);
+
+                using (var reader = command.ExecuteReader())
                 {
-                    Models.Console console = new Models.Console
+                    while (reader.Read())
                     {
-                        Id = (int)reader["id"],
-                        Name = reader["name"].ToString()
-                    };
-                    consoles.Add(console);
+                        Models.Console console = new Models.Console
+                        {
+                            Id = (int)reader["id"],
+                            Name = reader["name"].ToString()
+                        };
+                        consoles.Add(console);
+                    }
                 }
+                return consoles;
+            }            
+            catch(Exception)
+            {
+                throw;
             }
-            return consoles;
         }
         public async Task<List<GameSPVM>> GetAllGameSPVM()
         {
-            List<GameSPVM> games = new List<GameSPVM>();
-            using var conn = new NpgsqlConnection(_connectionString);
-            await conn.OpenAsync();
-
-            using var command = new NpgsqlCommand("select id, image_url from game", conn);
-
-            using (var reader = command.ExecuteReader())
+            try
             {
-                while (reader.Read())
-                {
-                    GameSPVM gameSPVM = new GameSPVM
-                    {
-                        Id = (int)reader["id"],
-                        ImageURL = reader["image_url"].ToString()
-                    };
+                List<GameSPVM> games = new List<GameSPVM>();
+                using var conn = new NpgsqlConnection(_connectionString);
+                await conn.OpenAsync();
 
-                    games.Add(gameSPVM);
+                using var command = new NpgsqlCommand("select id, image_url from game", conn);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        GameSPVM gameSPVM = new GameSPVM
+                        {
+                            Id = (int)reader["id"],
+                            ImageURL = reader["image_url"].ToString()
+                        };
+
+                        games.Add(gameSPVM);
+                    }
                 }
+                return games;
             }
-            return games;
+            catch (Exception)
+            {
+                throw;
+            }
         }
         public async Task<List<int>> GetAllGameIDs()
         {
-            List<int> gameIds = new List<int>();
-            using var conn = new NpgsqlConnection(_connectionString);
-            await conn.OpenAsync();
-
-            using var command = new NpgsqlCommand("select id from game", conn);
-
-            using (var reader = command.ExecuteReader())
+            try
             {
-                while (reader.Read())
+
+                List<int> gameIds = new List<int>();
+                using var conn = new NpgsqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                using var command = new NpgsqlCommand("select id from game", conn);
+
+                using (var reader = command.ExecuteReader())
                 {
-                    int id = (int)reader["id"];
-                    gameIds.Add(id);
+                    while (reader.Read())
+                    {
+                        int id = (int)reader["id"];
+                        gameIds.Add(id);
+                    }
                 }
+                return gameIds;
             }
-            return gameIds;
+            catch (Exception)
+            {
+                throw;
+            }
         }
         public async Task<Game> GetGameByIdAsync(int id)
         {
-            Game game = null;
-            using var conn = new NpgsqlConnection(_connectionString);
-            await conn.OpenAsync();
-                        
-            using var command = new NpgsqlCommand("select id, name, value, image_url, highscore, purchase_date, console_id, developer_id, publisher_id " +
-                                                    "from game " +
-                                                    "where id=@id", conn);
-
-            command.Parameters.AddWithValue("id", id);            
-
-            using (var reader = command.ExecuteReader())
+            try
             {
-                while (reader.Read())
-                {
-                    game = new Game
-                    {
-                        Id = (int)reader["id"],
-                        Name = reader["name"].ToString(),
-                        Value = (double)reader["value"],
-                        ImageUrl = reader["image_url"].ToString(),
-                        Highscore = ConvertFromDBVal<int?>(reader["highscore"]),
-                        PurchaseDate = (DateTime)reader["purchase_date"],
-                        ConsoleID = (int)reader["console_id"],
-                        DeveloperID = (int)reader["developer_id"],
-                        PublisherID = (int)reader["publisher_id"]
-                    };
-                }
-            }
+                Game game = null;
+                using var conn = new NpgsqlConnection(_connectionString);
+                await conn.OpenAsync();
 
-            return game;
+                using var command = new NpgsqlCommand("select id, name, value, image_url, highscore, purchase_date, console_id, developer_id, publisher_id " +
+                                                        "from game " +
+                                                        "where id=@id", conn);
+
+                command.Parameters.AddWithValue("id", id);
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (reader.Read())
+                    {
+                        game = new Game
+                        {
+                            Id = (int)reader["id"],
+                            Name = reader["name"].ToString(),
+                            Value = (double)reader["value"],
+                            ImageUrl = reader["image_url"].ToString(),
+                            Highscore = ConvertFromDBVal<int?>(reader["highscore"]),
+                            PurchaseDate = (DateTime)reader["purchase_date"],
+                            ConsoleID = (int)reader["console_id"],
+                            DeveloperID = (int)reader["developer_id"],
+                            PublisherID = (int)reader["publisher_id"]
+                        };
+                    }
+                }
+
+                return game;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
         private static T? ConvertFromDBVal<T>(object obj)
         {

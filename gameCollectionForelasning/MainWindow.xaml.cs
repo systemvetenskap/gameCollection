@@ -126,6 +126,7 @@ namespace gameCollectionForelasning
                 {
                     Company company = new Company { Name = txtCompanyName.Text };
                     await _dbRepo.CreateNewCompany(company);
+                    MessageBox.Show($"{company.Name} är nu tillagd i databasen.");
                 }
             }
             catch (Exception ex)
@@ -174,7 +175,7 @@ namespace gameCollectionForelasning
                 if (isGameDeleted)
                     MessageBox.Show($"Nu är spelet borta ur din samling!");
                 else
-                    MessageBox.Show($"Inget hände...");
+                    MessageBox.Show($"Spelet togs inte bort...");
             }
             catch (Exception ex)
             {
