@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace gameCollectionForelasning.Models.ViewModels
 {
-    public class GameSPVM
+    public class GameStackPanelViewModel
     {
         public int Id { get; set; }
         public string ImageURL { get; set; }

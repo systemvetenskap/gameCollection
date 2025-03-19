@@ -196,11 +196,11 @@ namespace gameCollectionForelasning.repositories
                 throw;
             }
         }
-        public async Task<List<GameSPVM>> GetAllGameSPVM()
+        public async Task<List<GameStackPanelViewModel>> GetAllGameSPVM()
         {
             try
             {
-                List<GameSPVM> games = new List<GameSPVM>();
+                List<GameStackPanelViewModel> games = new List<GameStackPanelViewModel>();
                 using var conn = new NpgsqlConnection(_connectionString);
                 await conn.OpenAsync();
 
@@ -210,7 +210,7 @@ namespace gameCollectionForelasning.repositories
                 {
                     while (reader.Read())
                     {
-                        GameSPVM gameSPVM = new GameSPVM
+                        GameStackPanelViewModel gameSPVM = new GameStackPanelViewModel
                         {
                             Id = (int)reader["id"],
                             ImageURL = reader["image_url"].ToString()
@@ -220,6 +220,71 @@ namespace gameCollectionForelasning.repositories
                     }
                 }
                 return games;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        public async Task<GameDetailViewModel> GetGameDetailViewModelById(int gameId)
+        {
+            try
+            {
+                GameDetailViewModel gameVM = null;
+                using var conn = new NpgsqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                using var gameCommando = new NpgsqlCommand("select id, name, value, image_url, highscore, purchase_date, console_id, developer_id, publisher_id " +
+                                                        "from game " +
+                                                        "where id=@id", conn);
+
+                gameCommando.Parameters.AddWithValue("id", gameId);
+
+                using (var reader = await gameCommando.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        gameVM = new GameDetailViewModel
+                        {
+                            Id = (int)reader["id"],
+                            Name = reader["name"].ToString(),
+                            Value = (double)reader["value"],
+                            ImageUrl = reader["image_url"].ToString(),
+                            Highscore = ConvertFromDBVal<int?>(reader["highscore"]),
+                            PurchaseDate = (DateTime)reader["purchase_date"],
+                            ConsoleID = (int)reader["console_id"],
+                            DeveloperID = (int)reader["developer_id"],
+                            PublisherID = (int)reader["publisher_id"]
+                        };
+                    }
+                }
+
+                if (gameVM != null)
+                {
+                    using var genreCommando = new NpgsqlCommand("select gg.genre_id, " +
+                                                                "ge.name " +
+                                                                "from game_genre gg " +
+                                                                "join genre ge on ge.id = gg.genre_id " +
+                                                                "where gg.game_id = @id", conn);
+
+                    genreCommando.Parameters.AddWithValue("id", gameId);
+
+                    using (var genreReader = await genreCommando.ExecuteReaderAsync())
+                    {
+                        while (await genreReader.ReadAsync())
+                        {
+                            Genre genre = new Genre
+                            {
+                                Id = (int)genreReader["genre_id"],
+                                Name = genreReader["name"].ToString()
+                            };
+                            gameVM.Genres.Add(genre);
+                        }
+                    }
+                }
+
+
+                return gameVM;
             }
             catch (Exception)
             {

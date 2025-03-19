@@ -29,14 +29,33 @@ namespace gameCollectionForelasning
             InitializeComponent();
             FillComboboxes();
             FillStackPanelWithGames();
+            FillStackPanelWithGenres();
+        }
+
+        private async void FillStackPanelWithGenres()
+        {
+            spGenres.Children.Clear();
+            List<Genre> genres = await _dbRepo.GetAllGenres();
+
+            foreach (Genre genre in genres)
+            {
+                CheckBox cb = new CheckBox
+                {
+                    Content = genre.Name,
+                    Tag = genre.Id,
+                    Margin = new Thickness(5)
+                };
+
+                spGenres.Children.Add(cb);
+            }
         }
 
         private async void FillStackPanelWithGames()
         {
             spGames.Children.Clear();
-            List<GameSPVM> games = await _dbRepo.GetAllGameSPVM();
+            List<GameStackPanelViewModel> games = await _dbRepo.GetAllGameSPVM();
 
-            foreach (GameSPVM g in games)
+            foreach (GameStackPanelViewModel g in games)
             {
                 Button btn = new Button
                 {
@@ -63,20 +82,19 @@ namespace gameCollectionForelasning
                 spGames.Children.Add(btn);
             }
         }
-
         private async void GameImage_Click(object sender, RoutedEventArgs e)
         {
             Button button = (Button)sender;
 
-            GameSPVM gamespvm = (GameSPVM)button.Tag;
+            GameStackPanelViewModel gamespvm = (GameStackPanelViewModel)button.Tag;
 
             if(gamespvm != null)
             {
-                Game game = await _dbRepo.GetGameByIdAsync(gamespvm.Id);
-                RefreshGameDataToUI(game);
+                //Game game = await _dbRepo.GetGameByIdAsync(gamespvm.Id);
+                GameDetailViewModel gameDetailViewModel = await _dbRepo.GetGameDetailViewModelById(gamespvm.Id);
+                RefreshGameDataToUI(gameDetailViewModel);
             }
         }
-
         private async void FillComboboxes()
         {
             List<Company> companies = await _dbRepo.GetAllCompanies();
@@ -86,38 +104,49 @@ namespace gameCollectionForelasning
             FillCombobox<Company>(cbDeveloper, companies);
             FillCombobox<Company>(cbPublisher, companies);
         }
-
         private async void FillCombobox<T>(ComboBox cb, List<T> list)
         {
             cb.ItemsSource = list;
             cb.DisplayMemberPath = "Name";
             cb.SelectedValuePath = "Id";
         }
-
         private async void btnGetGame_Click(object sender, RoutedEventArgs e)
         {
-            List<int> gameIds = await _dbRepo.GetAllGameIDs();
-            int index = random.Next(gameIds.Count);
+            //List<int> gameIds = await _dbRepo.GetAllGameIDs();
+            //int index = random.Next(gameIds.Count);
 
-            int randomId = gameIds[index];
+            //int randomId = gameIds[index];
 
-            Game game = await _dbRepo.GetGameByIdAsync(randomId);
-            _currentGame = game;
-            RefreshGameDataToUI(game);
+            //Game game = await _dbRepo.GetGameByIdAsync(randomId);
+            //_currentGame = game;
+            //RefreshGameDataToUI(game);
         }
-
-        private async void RefreshGameDataToUI(Game game)
+        private async void RefreshGameDataToUI(GameDetailViewModel gameViewModel)
         {
-            _currentGameId = game.Id;
-            txtGameName.Text = game.Name;
-            txtValue.Text = game.Value.ToString();
-            txtHighscore.Text = game.Highscore.ToString();
-            txtPurchaseDate.Text = game.PurchaseDate?.ToString("yyyy-MM-dd");
-            txtImageURL.Text = game.ImageUrl;
+            _currentGameId = gameViewModel.Id;
+            txtGameName.Text = gameViewModel.Name;
+            txtValue.Text = gameViewModel.Value.ToString();
+            txtHighscore.Text = gameViewModel.Highscore.ToString();
+            txtPurchaseDate.Text = gameViewModel.PurchaseDate?.ToString("yyyy-MM-dd");
+            txtImageURL.Text = gameViewModel.ImageUrl;
 
-            imgGameBoxart.Source = new BitmapImage(new Uri(game.ImageUrl));
+            imgGameBoxart.Source = new BitmapImage(new Uri(gameViewModel.ImageUrl));
+
+            cbConsoles.SelectedValue = gameViewModel.ConsoleID;
+            cbDeveloper.SelectedValue = gameViewModel.DeveloperID;
+            cbPublisher.SelectedValue = gameViewModel.PublisherID;
+
+            foreach (CheckBox cb in spGenres.Children)
+            {
+                cb.IsChecked = false;
+
+                if (gameViewModel.Genres.Any(x => x.Id == (int)cb.Tag))
+                {
+                    cb.IsChecked = true;
+                }
+            }
+
         }
-
         private async void btnCreateCompany_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -127,6 +156,7 @@ namespace gameCollectionForelasning
                     Company company = new Company { Name = txtCompanyName.Text };
                     await _dbRepo.CreateNewCompany(company);
                     MessageBox.Show($"{company.Name} är nu tillagd i databasen.");
+                    FillComboboxes();
                 }
             }
             catch (Exception ex)
@@ -134,9 +164,7 @@ namespace gameCollectionForelasning
                 MessageBox.Show($"Aj aj det blev något fel: {ex.Message}");
             }            
         }
-
         
-
         private async void btnSaveChanges_Click(object sender, RoutedEventArgs e)
         {
             if (_currentGameId == null)
