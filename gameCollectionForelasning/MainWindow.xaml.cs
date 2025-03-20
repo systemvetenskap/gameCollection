@@ -9,8 +9,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using gameCollectionForelasning.Models;
-using gameCollectionForelasning.Models.ViewModels;
 using gameCollectionForelasning.repositories;
+using gameCollectionForelasning.ViewModels;
 
 namespace gameCollectionForelasning
 {
@@ -19,7 +19,7 @@ namespace gameCollectionForelasning
     /// </summary>
     public partial class MainWindow : Window
     {
-        DbRepository _dbRepo = new DbRepository();
+        GameService _gameService = new GameService();
         Random random = new Random();
         int? _currentGameId;
         Game _currentGame;
@@ -27,15 +27,22 @@ namespace gameCollectionForelasning
         public MainWindow()
         {
             InitializeComponent();
-            FillComboboxes();
-            FillStackPanelWithGames();
-            FillStackPanelWithGenres();
+            ProgramStartup();
         }
 
-        private async void FillStackPanelWithGenres()
+        private async void ProgramStartup()
+        {
+            var fillComboBoxes = FillComboboxes();
+            var fillStackPanelsWithGames = FillStackPanelWithGames();
+            var fillStackPanelsWithGernes = FillStackPanelWithGenres();
+
+            await Task.WhenAll(fillComboBoxes, fillStackPanelsWithGames, fillStackPanelsWithGernes);
+        }
+
+        private async Task FillStackPanelWithGenres()
         {
             spGenres.Children.Clear();
-            List<Genre> genres = await _dbRepo.GetAllGenres();
+            List<Genre> genres = await _gameService.GetAllGenres();
 
             foreach (Genre genre in genres)
             {
@@ -49,11 +56,10 @@ namespace gameCollectionForelasning
                 spGenres.Children.Add(cb);
             }
         }
-
-        private async void FillStackPanelWithGames()
+        private async Task FillStackPanelWithGames()
         {
             spGames.Children.Clear();
-            List<GameStackPanelViewModel> games = await _dbRepo.GetAllGameSPVM();
+            List<GameStackPanelViewModel> games = await _gameService.GetAllGameSPVM();
 
             foreach (GameStackPanelViewModel g in games)
             {
@@ -90,15 +96,15 @@ namespace gameCollectionForelasning
 
             if(gamespvm != null)
             {
-                //Game game = await _dbRepo.GetGameByIdAsync(gamespvm.Id);
-                GameDetailViewModel gameDetailViewModel = await _dbRepo.GetGameDetailViewModelById(gamespvm.Id);
+                //Game game = await _gameService.GetGameByIdAsync(gamespvm.Id);
+                GameDetailViewModel gameDetailViewModel = await _gameService.GetGameDetailViewModelById(gamespvm.Id);
                 RefreshGameDataToUI(gameDetailViewModel);
             }
         }
-        private async void FillComboboxes()
+        private async Task FillComboboxes()
         {
-            List<Company> companies = await _dbRepo.GetAllCompanies();
-            List<Models.Console> consoles = await _dbRepo.GetAllConsoles();
+            List<Company> companies = await _gameService.GetAllCompanies();
+            List<Models.Console> consoles = await _gameService.GetAllConsoles();
 
             FillCombobox<Models.Console>(cbConsoles, consoles);
             FillCombobox<Company>(cbDeveloper, companies);
@@ -112,12 +118,12 @@ namespace gameCollectionForelasning
         }
         private async void btnGetGame_Click(object sender, RoutedEventArgs e)
         {
-            //List<int> gameIds = await _dbRepo.GetAllGameIDs();
+            //List<int> gameIds = await _gameService.GetAllGameIDs();
             //int index = random.Next(gameIds.Count);
 
             //int randomId = gameIds[index];
 
-            //Game game = await _dbRepo.GetGameByIdAsync(randomId);
+            //Game game = await _gameService.GetGameByIdAsync(randomId);
             //_currentGame = game;
             //RefreshGameDataToUI(game);
         }
@@ -154,7 +160,7 @@ namespace gameCollectionForelasning
                 if (txtCompanyName.Text.Length > 0)
                 {
                     Company company = new Company { Name = txtCompanyName.Text };
-                    await _dbRepo.CreateNewCompany(company);
+                    await _gameService.CreateNewCompany(company);
                     MessageBox.Show($"{company.Name} är nu tillagd i databasen.");
                     FillComboboxes();
                 }
@@ -163,8 +169,7 @@ namespace gameCollectionForelasning
             {
                 MessageBox.Show($"Aj aj det blev något fel: {ex.Message}");
             }            
-        }
-        
+        }        
         private async void btnSaveChanges_Click(object sender, RoutedEventArgs e)
         {
             if (_currentGameId == null)
@@ -182,7 +187,7 @@ namespace gameCollectionForelasning
                     ImageUrl = txtImageURL.Text
                 };
 
-                bool updateDone = await _dbRepo.UpdateGame(game);
+                bool updateDone = await _gameService.UpdateGame(game);
                 if (updateDone)
                     MessageBox.Show($"Det gick bra, nu är allt sparat!");
                 else
@@ -193,12 +198,11 @@ namespace gameCollectionForelasning
                 MessageBox.Show($"Något blev fel: {ex.Message}");
             }
         }
-
         private async void btnDeleteGame_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                bool isGameDeleted = await _dbRepo.DeleteGame(_currentGame);
+                bool isGameDeleted = await _gameService.DeleteGame(_currentGame);
 
                 if (isGameDeleted)
                     MessageBox.Show($"Nu är spelet borta ur din samling!");

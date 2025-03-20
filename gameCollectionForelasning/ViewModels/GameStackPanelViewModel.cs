@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace gameCollectionForelasning.Models.ViewModels
+namespace gameCollectionForelasning.ViewModels
 {
     public class GameStackPanelViewModel
     {

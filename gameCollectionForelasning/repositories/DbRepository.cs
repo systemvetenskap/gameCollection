@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using gameCollectionForelasning.Models;
-using gameCollectionForelasning.Models.ViewModels;
+using gameCollectionForelasning.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 
@@ -20,13 +20,12 @@ namespace gameCollectionForelasning.repositories
                             .Build();
 
             _connectionString = config.GetConnectionString("DefaultConnection");
-        }
+        }        
         public async Task CreateNewCompany(Company company)
         {
             try
             {
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using var conn = await GetNewConnection();
 
                 using var command = new NpgsqlCommand("insert into company(name)" +
                                                         "values(@company_name)", conn);
@@ -61,8 +60,7 @@ namespace gameCollectionForelasning.repositories
         {
             try
             {
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using var conn = await GetNewConnection();
 
                 using var command = new NpgsqlCommand("delete from game " +
                                                         "where id=@id", conn);
@@ -80,8 +78,7 @@ namespace gameCollectionForelasning.repositories
         {
             try
             {
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using NpgsqlConnection conn = await GetNewConnection();
 
                 using var command = new NpgsqlCommand("update game " +
                                                         "set value=@value, " +
@@ -100,7 +97,7 @@ namespace gameCollectionForelasning.repositories
 
                 return await command.ExecuteNonQueryAsync() > 0;
             }
-            catch(PostgresException)
+            catch (PostgresException)
             {
                 throw;
             }
@@ -109,14 +106,18 @@ namespace gameCollectionForelasning.repositories
                 throw;
             }            
         }
+        private async Task<NpgsqlConnection> GetNewConnection()
+        {
+            var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            return conn;
+        }
         public async Task<List<Company>> GetAllCompanies()
         {
             try
             {
                 List<Company> companies = new List<Company>();
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
-
+                using var conn = await GetNewConnection();
                 using var command = new NpgsqlCommand("select id, name from company", conn);
 
                 using (var reader = command.ExecuteReader())
@@ -143,8 +144,7 @@ namespace gameCollectionForelasning.repositories
             try
             {
                 List<Genre> genres = new List<Genre>();
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using var conn = await GetNewConnection();               
 
                 using var command = new NpgsqlCommand("select id, name from genre", conn);
 
@@ -172,8 +172,7 @@ namespace gameCollectionForelasning.repositories
             try
             {
                 List<Models.Console> consoles = new List<Models.Console>();
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using var conn = await GetNewConnection();
 
                 using var command = new NpgsqlCommand("select id, name from console", conn);
 
@@ -195,110 +194,14 @@ namespace gameCollectionForelasning.repositories
             {
                 throw;
             }
-        }
-        public async Task<List<GameStackPanelViewModel>> GetAllGameSPVM()
-        {
-            try
-            {
-                List<GameStackPanelViewModel> games = new List<GameStackPanelViewModel>();
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
-
-                using var command = new NpgsqlCommand("select id, image_url from game", conn);
-
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        GameStackPanelViewModel gameSPVM = new GameStackPanelViewModel
-                        {
-                            Id = (int)reader["id"],
-                            ImageURL = reader["image_url"].ToString()
-                        };
-
-                        games.Add(gameSPVM);
-                    }
-                }
-                return games;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-        public async Task<GameDetailViewModel> GetGameDetailViewModelById(int gameId)
-        {
-            try
-            {
-                GameDetailViewModel gameVM = null;
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
-
-                using var gameCommando = new NpgsqlCommand("select id, name, value, image_url, highscore, purchase_date, console_id, developer_id, publisher_id " +
-                                                        "from game " +
-                                                        "where id=@id", conn);
-
-                gameCommando.Parameters.AddWithValue("id", gameId);
-
-                using (var reader = await gameCommando.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        gameVM = new GameDetailViewModel
-                        {
-                            Id = (int)reader["id"],
-                            Name = reader["name"].ToString(),
-                            Value = (double)reader["value"],
-                            ImageUrl = reader["image_url"].ToString(),
-                            Highscore = ConvertFromDBVal<int?>(reader["highscore"]),
-                            PurchaseDate = (DateTime)reader["purchase_date"],
-                            ConsoleID = (int)reader["console_id"],
-                            DeveloperID = (int)reader["developer_id"],
-                            PublisherID = (int)reader["publisher_id"]
-                        };
-                    }
-                }
-
-                if (gameVM != null)
-                {
-                    using var genreCommando = new NpgsqlCommand("select gg.genre_id, " +
-                                                                "ge.name " +
-                                                                "from game_genre gg " +
-                                                                "join genre ge on ge.id = gg.genre_id " +
-                                                                "where gg.game_id = @id", conn);
-
-                    genreCommando.Parameters.AddWithValue("id", gameId);
-
-                    using (var genreReader = await genreCommando.ExecuteReaderAsync())
-                    {
-                        while (await genreReader.ReadAsync())
-                        {
-                            Genre genre = new Genre
-                            {
-                                Id = (int)genreReader["genre_id"],
-                                Name = genreReader["name"].ToString()
-                            };
-                            gameVM.Genres.Add(genre);
-                        }
-                    }
-                }
-
-
-                return gameVM;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
+        }        
         public async Task<List<int>> GetAllGameIDs()
         {
             try
             {
 
                 List<int> gameIds = new List<int>();
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using var conn = await GetNewConnection();
 
                 using var command = new NpgsqlCommand("select id from game", conn);
 
@@ -322,8 +225,7 @@ namespace gameCollectionForelasning.repositories
             try
             {
                 Game game = null;
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using var conn = await GetNewConnection();
 
                 using var command = new NpgsqlCommand("select id, name, value, image_url, highscore, purchase_date, console_id, developer_id, publisher_id " +
                                                         "from game " +
@@ -351,6 +253,70 @@ namespace gameCollectionForelasning.repositories
                 }
 
                 return game;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        public async Task<List<Genre>> GetGenresForGame(int gameId)
+        {
+            try
+            {
+                List<Genre> genres = new List<Genre>();
+                using var conn = await GetNewConnection();
+
+                using var genreCommando = new NpgsqlCommand("select gg.genre_id, " +
+                                                                "ge.name " +
+                                                                "from game_genre gg " +
+                                                                "join genre ge on ge.id = gg.genre_id " +
+                                                                "where gg.game_id = @id", conn);
+
+                genreCommando.Parameters.AddWithValue("id", gameId);
+
+                using (var genreReader = await genreCommando.ExecuteReaderAsync())
+                {
+                    while (await genreReader.ReadAsync())
+                    {
+                        Genre genre = new Genre
+                        {
+                            Id = (int)genreReader["genre_id"],
+                            Name = genreReader["name"].ToString()
+                        };
+                        genres.Add(genre);
+                    }
+                }
+
+                return genres;
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+        public async Task<List<GameStackPanelViewModel>> GetAllGameSPVM()
+        {
+            try
+            {
+                List<GameStackPanelViewModel> games = new List<GameStackPanelViewModel>();
+                using var conn = await GetNewConnection();
+
+                using var command = new NpgsqlCommand("select id, image_url from game", conn);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        GameStackPanelViewModel gameSPVM = new GameStackPanelViewModel
+                        {
+                            Id = (int)reader["id"],
+                            ImageURL = reader["image_url"].ToString()
+                        };
+
+                        games.Add(gameSPVM);
+                    }
+                }
+                return games;
             }
             catch (Exception)
             {
