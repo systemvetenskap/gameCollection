@@ -57,17 +57,74 @@ namespace gameCollectionForelasning.repositories
                 throw;
             }
         }
-        public async Task<bool> DeleteGame(Game game)
+        public async Task<int?> CreateNewGame(Game game, List<Genre> genres)
+        {
+            using NpgsqlConnection conn = await CreateAndOpenConnection();
+
+            using var transaction = await conn.BeginTransactionAsync();
+
+            try
+            {
+                // Skapa spelet
+
+                var gameCommando = new NpgsqlCommand("INSERT INTO game(name, value, image_url, " +
+                    "highscore, purchase_date, console_id, developer_id, publisher_id) " +
+                    "VALUES (@name, @value, @image_url, @highscore, @purchase_date, " +
+                    "@console_id, @developer_id, @publisher_id) " +
+                    "RETURNING id", conn, transaction);
+
+                gameCommando.Parameters.AddWithValue("name", game.Name);
+                gameCommando.Parameters.AddWithValue("value", game.Value);
+                gameCommando.Parameters.AddWithValue("image_url", game.ImageUrl);
+                gameCommando.Parameters.AddWithValue("purchase_date", game.PurchaseDate);
+                gameCommando.Parameters.AddWithValue("highscore", ConvertToDBVal<int?>(game.Highscore));
+                gameCommando.Parameters.AddWithValue("console_id", game.ConsoleID);
+                gameCommando.Parameters.AddWithValue("developer_id", game.DeveloperID);
+                gameCommando.Parameters.AddWithValue("publisher_id", game.PublisherID);
+
+                var gameId = (int)await gameCommando.ExecuteScalarAsync();
+
+                // Lägga in våra genres kopplade till spelet
+                foreach (Genre ge in genres)
+                {
+                    var genreCommando = new NpgsqlCommand("INSERT INTO game_genre (game_id,genre_id) " +
+                        "VALUES (@game_id, @genre_id)", conn, transaction);
+
+                    genreCommando.Parameters.AddWithValue("game_id", gameId);
+                    genreCommando.Parameters.AddWithValue("genre_id", ge.Id);
+
+                    await genreCommando.ExecuteNonQueryAsync();
+                }
+
+                // Commita
+                await transaction.CommitAsync();
+
+            }
+            catch (Exception ex)
+            {
+                // Rollback
+                await transaction.RollbackAsync();
+                throw new Exception("Något gick fel vid transaktionen, ingen ändring sparades.", ex);
+            }
+            return null;
+        }
+
+        private async Task<NpgsqlConnection> CreateAndOpenConnection()
+        {
+            var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            return conn;
+        }
+        public async Task<bool> DeleteGame(int gameId)
         {
             try
             {
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using NpgsqlConnection conn = await CreateAndOpenConnection();
 
                 using var command = new NpgsqlCommand("delete from game " +
                                                         "where id=@id", conn);
 
-                command.Parameters.AddWithValue("id", game.Id);
+                command.Parameters.AddWithValue("id", gameId);
 
                 return await command.ExecuteNonQueryAsync() > 0;
             }
@@ -80,15 +137,17 @@ namespace gameCollectionForelasning.repositories
         {
             try
             {
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using NpgsqlConnection conn = await CreateAndOpenConnection();
 
                 using var command = new NpgsqlCommand("update game " +
                                                         "set value=@value, " +
                                                         "name=@name, " +
                                                         "image_url=@url, " +
                                                         "purchase_date=@date, " +
-                                                        "highscore=@highscore " +
+                                                        "highscore=@highscore, " +
+                                                        "console_id=@console_id, " +
+                                                        "developer_id=@developer_id, " +
+                                                        "publisher_id=@publisher_id " +
                                                         "where id=@id", conn);
 
                 command.Parameters.AddWithValue("value", game.Value);
@@ -96,6 +155,9 @@ namespace gameCollectionForelasning.repositories
                 command.Parameters.AddWithValue("url", game.ImageUrl);
                 command.Parameters.AddWithValue("date", game.PurchaseDate);
                 command.Parameters.AddWithValue("highscore", ConvertToDBVal<int?>(game.Highscore));
+                command.Parameters.AddWithValue("console_id", game.ConsoleID);
+                command.Parameters.AddWithValue("developer_id", game.DeveloperID);
+                command.Parameters.AddWithValue("publisher_id", game.PublisherID);
                 command.Parameters.AddWithValue("id", game.Id);
 
                 return await command.ExecuteNonQueryAsync() > 0;
@@ -114,8 +176,7 @@ namespace gameCollectionForelasning.repositories
             try
             {
                 List<Company> companies = new List<Company>();
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using NpgsqlConnection conn = await CreateAndOpenConnection();
 
                 using var command = new NpgsqlCommand("select id, name from company", conn);
 
@@ -143,8 +204,7 @@ namespace gameCollectionForelasning.repositories
             try
             {
                 List<Genre> genres = new List<Genre>();
-                using var conn = new NpgsqlConnection(_connectionString);
-                await conn.OpenAsync();
+                using NpgsqlConnection conn = await CreateAndOpenConnection();
 
                 using var command = new NpgsqlCommand("select id, name from genre", conn);
 

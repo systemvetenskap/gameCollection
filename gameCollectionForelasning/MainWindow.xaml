@@ -138,7 +138,7 @@
         <Button
             x:Name="btnDeleteGame"
             Width="74"
-            Margin="192,421,0,0"
+            Margin="234,421,0,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Background="Red"
@@ -185,6 +185,7 @@
             VerticalAlignment="Top" Grid.Column="1" />
         <StackPanel x:Name="spGames" Margin="10,10,10,454" Orientation="Horizontal" Grid.ColumnSpan="2"/>
         <StackPanel x:Name="spGenres" Margin="439,188,33,50" Grid.Column="1"/>
+        <Button x:Name="btnClearField" Content="Töm alla fält" HorizontalAlignment="Left" Margin="148,421,0,0" VerticalAlignment="Top" Width="81" Grid.Column="1" Click="btnClearField_Click"/>
 
     </Grid>
 </Window>

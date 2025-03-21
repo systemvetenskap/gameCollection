@@ -20,9 +20,8 @@ namespace gameCollectionForelasning
     public partial class MainWindow : Window
     {
         DbRepository _dbRepo = new DbRepository();
-        Random random = new Random();
-        int? _currentGameId;
-        Game _currentGame;
+        Random random = new Random();        
+        GameDetailViewModel _currentGame;
 
         public MainWindow()
         {
@@ -49,7 +48,6 @@ namespace gameCollectionForelasning
                 spGenres.Children.Add(cb);
             }
         }
-
         private async void FillStackPanelWithGames()
         {
             spGames.Children.Clear();
@@ -100,15 +98,19 @@ namespace gameCollectionForelasning
             List<Company> companies = await _dbRepo.GetAllCompanies();
             List<Models.Console> consoles = await _dbRepo.GetAllConsoles();
 
+            companies.Insert(0, new Models.Company { Id = -1, Name = "**Välj bolag**" });
+            consoles.Insert(0, new Models.Console { Id = -1, Name = "**Välj konsol**" });
+
             FillCombobox<Models.Console>(cbConsoles, consoles);
             FillCombobox<Company>(cbDeveloper, companies);
             FillCombobox<Company>(cbPublisher, companies);
         }
         private async void FillCombobox<T>(ComboBox cb, List<T> list)
-        {
+        {            
             cb.ItemsSource = list;
             cb.DisplayMemberPath = "Name";
             cb.SelectedValuePath = "Id";
+            cb.SelectedIndex = 0;
         }
         private async void btnGetGame_Click(object sender, RoutedEventArgs e)
         {
@@ -123,7 +125,7 @@ namespace gameCollectionForelasning
         }
         private async void RefreshGameDataToUI(GameDetailViewModel gameViewModel)
         {
-            _currentGameId = gameViewModel.Id;
+            _currentGame = gameViewModel;
             txtGameName.Text = gameViewModel.Name;
             txtValue.Text = gameViewModel.Value.ToString();
             txtHighscore.Text = gameViewModel.Highscore.ToString();
@@ -167,26 +169,47 @@ namespace gameCollectionForelasning
         
         private async void btnSaveChanges_Click(object sender, RoutedEventArgs e)
         {
-            if (_currentGameId == null)
-                return;
-
             try
             {                
                 Game game = new Game
                 {
-                    Id = (int)_currentGameId,
+                    Id = _currentGame?.Id ?? 0,
                     Name = txtGameName.Text,
                     Value = double.Parse(txtValue.Text),
                     PurchaseDate = DateTime.Parse(txtPurchaseDate.Text),
                     Highscore = txtHighscore.Text.Length > 0 ? int.Parse(txtHighscore.Text) : null,
-                    ImageUrl = txtImageURL.Text
+                    ImageUrl = txtImageURL.Text,
+                    ConsoleID = (int)cbConsoles.SelectedValue,
+                    DeveloperID = (int)cbDeveloper.SelectedValue,
+                    PublisherID = (int)cbPublisher.SelectedValue
                 };
 
-                bool updateDone = await _dbRepo.UpdateGame(game);
-                if (updateDone)
-                    MessageBox.Show($"Det gick bra, nu är allt sparat!");
+                List<Genre> genres = new List<Genre>();
+
+                foreach (CheckBox cb in spGenres.Children)
+                {
+                    if (cb.IsChecked == true)
+                        genres.Add(new Genre { Id = (int)cb.Tag, Name = cb.Content.ToString() });
+                }
+
+                if (_currentGame == null)
+                {
+                    var gameId = await _dbRepo.CreateNewGame(game, genres);
+                    if (gameId != null)
+                    {
+                        GameDetailViewModel gameDetailViewModel = await _dbRepo.GetGameDetailViewModelById((int)gameId);
+                        RefreshGameDataToUI(gameDetailViewModel);
+                    }
+                }
                 else
-                    MessageBox.Show($"Ingen ändring gjordes... :( ");
+                {
+                    bool updateDone = await _dbRepo.UpdateGame(game);
+                    if (updateDone)
+                        MessageBox.Show($"Det gick bra, nu är allt sparat!");
+                    else
+                        MessageBox.Show($"Ingen ändring gjordes... :( ");
+                }
+                FillStackPanelWithGames();
             }
             catch (Exception ex)
             {
@@ -198,7 +221,7 @@ namespace gameCollectionForelasning
         {
             try
             {
-                bool isGameDeleted = await _dbRepo.DeleteGame(_currentGame);
+                bool isGameDeleted = await _dbRepo.DeleteGame(_currentGame.Id);
 
                 if (isGameDeleted)
                     MessageBox.Show($"Nu är spelet borta ur din samling!");
@@ -208,6 +231,33 @@ namespace gameCollectionForelasning
             catch (Exception ex)
             {
                 MessageBox.Show($"Något blev fel: {ex.Message}");
+            }
+        }
+
+        private void btnClearField_Click(object sender, RoutedEventArgs e)
+        {
+            ClearAllFields();
+        }
+
+        private void ClearAllFields()
+        {
+            _currentGame = null;
+
+            txtGameName.Text = string.Empty;
+            txtValue.Text = string.Empty;
+            txtPurchaseDate.Text = string.Empty;
+            txtHighscore.Text = string.Empty;
+            txtImageURL.Text = string.Empty;
+
+            cbConsoles.SelectedIndex = 0;
+            cbDeveloper.SelectedIndex = 0;
+            cbPublisher.SelectedIndex = 0;
+
+            imgGameBoxart.Source = null;
+
+            foreach (CheckBox cb in spGenres.Children)
+            {
+                cb.IsChecked = false;
             }
         }
     }
