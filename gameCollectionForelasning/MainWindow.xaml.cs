@@ -22,6 +22,7 @@ namespace gameCollectionForelasning
         DbRepository _dbRepo = new DbRepository();
         Random random = new Random();        
         GameDetailViewModel _currentGame;
+        // Här är en kommentar
 
         public MainWindow()
         {
@@ -30,7 +31,6 @@ namespace gameCollectionForelasning
             FillStackPanelWithGames();
             FillStackPanelWithGenres();
         }
-
         private async void FillStackPanelWithGenres()
         {
             spGenres.Children.Clear();
@@ -165,8 +165,7 @@ namespace gameCollectionForelasning
             {
                 MessageBox.Show($"Aj aj det blev något fel: {ex.Message}");
             }            
-        }
-        
+        }        
         private async void btnSaveChanges_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -216,7 +215,6 @@ namespace gameCollectionForelasning
                 MessageBox.Show($"Något blev fel: {ex.Message}");
             }
         }
-
         private async void btnDeleteGame_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -233,12 +231,10 @@ namespace gameCollectionForelasning
                 MessageBox.Show($"Något blev fel: {ex.Message}");
             }
         }
-
         private void btnClearField_Click(object sender, RoutedEventArgs e)
         {
             ClearAllFields();
         }
-
         private void ClearAllFields()
         {
             _currentGame = null;

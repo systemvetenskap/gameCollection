@@ -108,7 +108,6 @@ namespace gameCollectionForelasning.repositories
             }
             return null;
         }
-
         private async Task<NpgsqlConnection> CreateAndOpenConnection()
         {
             var conn = new NpgsqlConnection(_connectionString);
@@ -355,11 +354,10 @@ namespace gameCollectionForelasning.repositories
         {
             try
             {
-
                 List<int> gameIds = new List<int>();
                 using var conn = new NpgsqlConnection(_connectionString);
                 await conn.OpenAsync();
-
+                                
                 using var command = new NpgsqlCommand("select id from game", conn);
 
                 using (var reader = command.ExecuteReader())
